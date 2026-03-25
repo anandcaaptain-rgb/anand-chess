@@ -1,0 +1,124 @@
+:root {
+  --primary: #81b64c;
+  --bg: #0f172a;
+  --surface: rgba(30, 41, 59, 0.7);
+  --border: rgba(255, 255, 255, 0.1);
+}
+
+.anand-viewport {
+  height: 100vh;
+  background: radial-gradient(circle at top right, #1e293b, #020617);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+}
+
+.glass-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr 320px;
+  width: 95vw;
+  height: 90vh;
+  gap: 20px;
+}
+
+.side-panel {
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.brand-header h1 { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+.brand-header h1 span { color: var(--primary); }
+.gold { color: #facc15; }
+
+.mode-selector button {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.mode-selector button.active {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Evaluation Bar */
+.eval-bar-container {
+  margin-top: auto;
+  text-align: center;
+}
+
+.eval-track {
+  width: 20px;
+  height: 200px;
+  background: #000;
+  margin: 10px auto;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.eval-fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: white;
+  transition: height 0.5s ease-out;
+}
+
+/* Move Review List */
+.review-list {
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.review-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: rgba(0,0,0,0.2);
+  margin-bottom: 8px;
+  border-radius: 8px;
+  gap: 10px;
+}
+
+.move-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: white;
+}
+
+.board-container {
+  width: 100%;
+  max-width: 750px;
+  margin: 0 auto;
+  filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
+}
