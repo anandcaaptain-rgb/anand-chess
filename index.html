@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANAND CHESS | God Tier</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #020617;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            width: 100%;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        h1 { margin: 0; letter-spacing: 3px; font-weight: 900; }
+        h1 span { color: var(--primary); }
+
+        #board {
+            width: 90vw;
+            max-width: 500px;
+            margin: 20px auto;
+            border: 5px solid #1e293b;
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 90vw;
+            max-width: 500px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .status-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--glass);
+            border-radius: 15px;
+            width: 80vw;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        .peer-id {
+            font-family: monospace;
+            background: #000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>ANAND<span>CHESS</span></h1>
+        <p>God-Tier Mobile Edition</p>
+    </div>
+
+    <div id="board"></div>
+
+    <div class="status-panel">
+        <div id="status">White to move</div>
+        <div style="margin-top: 10px; font-size: 12px;">
+            Your ID: <span id="my-id" class="peer-id">Connecting...</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="resetGame()">New Game</button>
+        <button onclick="connectToPeer()" style="background: #1e293b;">Join Human</button>
+    </div>
+
+    <script>
+        // INITIALIZE THE BRAIN
+        var board = null;
+        var game = new Chess();
+        var $status = document.getElementById('status');
+        var peer = new Peer();
+        var conn = null;
+
+        // P2P LOGIC
+        peer.on('open', (id) => {
+            document.getElementById('my-id').innerText = id;
+        });
+
+        peer.on('connection', (c) => {
+            conn = c;
+            setupConnection();
+        });
+
+        function connectToPeer() {
+            const remoteId = prompt("Enter Friend's ID:");
+            if (remoteId) {
+                conn = peer.connect(remoteId);
+                setupConnection();
+            }
+        }
+
+        function setupConnection() {
+            conn.on('data', (data) => {
+                game.load(data);
+                board.position(game.fen());
+                updateStatus();
+            });
+            alert("P2P Connected!");
+        }
+
+        // CHESS RULES (En Passant, Castling, Promotion)
+        function onDragStart (source, piece, position, orientation) {
+            if (game.game_over()) return false;
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+        }
+
+        function onDrop (source, target) {
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q' // NOTE: Always promote to queen for mobile simplicity
+            });
+
+            if (move === null) return 'snapback';
+
+            if (conn) conn.send(game.fen());
+            updateStatus();
+        }
+
+        function onSnapEnd () {
+            board.position(game.fen());
+        }
+
+        function updateStatus () {
+            var status = '';
+            var moveColor = (game.turn() === 'b') ? 'Black' : 'White';
+
+            if (game.in_checkmate()) {
+                status = 'Game over, ' + moveColor + ' is in checkmate.';
+                confetti();
+            } else if (game.in_draw()) {
+                status = 'Game over, drawn position';
+            } else {
+                status = moveColor + ' to move';
+                if (game.in_check()) {
+                    status += ', ' + moveColor + ' is in check';
+                }
+            }
+
+            $status.innerHTML = status;
+        }
+
+        // BOARD CONFIG
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd,
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+        };
+
+        board = Chessboard('board', config);
+        updateStatus();
+
+        function resetGame() {
+            game.reset();
+            board.start();
+            updateStatus();
+        }
+    </script>
+</body>
+</html>
